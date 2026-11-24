@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Spring Boot TMS App",
+            "type": "shell",
+            "command": "${workspaceFolder}\\run.bat",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Maven Package (Build JAR)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\mvnw.cmd package",
+            "problemMatcher": []
+        }
+    ]
+}

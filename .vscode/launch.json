@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run TMS Application (Spring Boot)",
+            "request": "launch",
+            "mainClass": "com.transport.tms.TransportationApplication",
+            "projectName": "transport-management-system",
+            "env": {
+                "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.13.10002-hotspot"
+            }
+        }
+    ]
+}

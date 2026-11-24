@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transport &amp; Logistic Management System (TMS)</title>
+    <!-- Google Font & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <div class="brand-text">
+                <h1>TransLogix <span class="badge-tms">TMS</span></h1>
+                <p>Transport &amp; Logistic Management Platform</p>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <button class="nav-tab active" data-view="customer" onclick="switchView('customer')">
+                <i class="fa-solid fa-user-tag"></i> Customer Portal
+            </button>
+            <button class="nav-tab" data-view="admin" onclick="switchView('admin')">
+                <i class="fa-solid fa-shield-halved"></i> Admin Logistics
+            </button>
+        </nav>
+
+        <div class="nav-user">
+            <a href="/h2-console" target="_blank" class="btn btn-outline-sm" title="Open H2 Database Console (JDBC URL: jdbc:h2:mem:transportdb)">
+                <i class="fa-solid fa-database text-primary"></i> H2 DB
+            </a>
+            <div class="user-pill" id="user-display">
+                <i class="fa-solid fa-circle-user"></i>
+                <span id="current-user-name">Shaheed Sofi Patel</span>
+                <span class="user-role-badge" id="current-user-role">CUSTOMER</span>
+            </div>
+            <button class="btn btn-outline-sm" onclick="openLoginModal()" title="Switch User or Register">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Switch / Login
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="container">
+
+        <!-- ==========================================
+             CUSTOMER PORTAL VIEW
+        =========================================== -->
+        <section id="view-customer" class="portal-view active">
+            <!-- Hero / Quick Track Banner -->
+            <div class="hero-banner">
+                <div class="hero-content">
+                    <h2>Book Transportation &amp; Track Consignments</h2>
+                    <p>Instant cargo booking with live vehicle availability, automatic fare estimation, and real-time status tracking.</p>
+                </div>
+                <div class="hero-track-box">
+                    <form onsubmit="handleQuickTrack(event)" class="track-form">
+                        <div class="track-input-group">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="track-number-input" placeholder="Enter Tracking No. (e.g. TMS-1001-PUNE)" required>
+                            <button type="submit" class="btn btn-primary">Track</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tracking Modal / Result Card -->
+            <div id="tracking-result-card" class="tracking-result card hidden">
+                <div class="card-header">
+                    <div class="tracking-title">
+                        <i class="fa-solid fa-route"></i>
+                        <span>Consignment Status: <strong id="track-id-result"></strong></span>
+                    </div>
+                    <button class="btn-close" onclick="closeTrackingCard()">&times;</button>
+                </div>
+                <div class="tracking-progress-wrapper" id="tracking-steps-container">
+                    <!-- Steps injected dynamically -->
+                </div>
+                <div class="tracking-details-grid" id="tracking-info-grid">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Customer Grid: Booking Form (Left) & My Bookings (Right) -->
+            <div class="dashboard-grid">
+                
+                <!-- Left: New Booking Form -->
+                <div class="card booking-form-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-box-open text-primary"></i>
+                            <h3>Book Transport Service</h3>
+                        </div>
+                        <span class="step-indicator">Step 1 of 1</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="booking-form" onsubmit="handleCreateBooking(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pickupLocation"><i class="fa-solid fa-location-dot"></i> Pickup Location *</label>
+                                    <input type="text" id="pickupLocation" placeholder="e.g. Pune Nagar Road Warehouse" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dropLocation"><i class="fa-solid fa-flag-checkered"></i> Drop-off Location *</label>
+                                    <input type="text" id="dropLocation" placeholder="e.g. Mumbai Nhava Sheva Port" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pickupDate"><i class="fa-solid fa-calendar-days"></i> Pickup Date *</label>
+                                    <input type="date" id="pickupDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cargoType"><i class="fa-solid fa-cubes-stacked"></i> Goods / Cargo Type *</label>
+                                    <select id="cargoType" required>
+                                        <option value="Industrial Machinery Parts">Industrial Machinery Parts</option>
+                                        <option value="Automotive Spare Parts">Automotive Spare Parts</option>
+                                        <option value="Consumer Electronics">Consumer Electronics</option>
+                                        <option value="Furniture & Household Goods">Furniture &amp; Household Goods</option>
+                                        <option value="Pharmaceuticals & Medical Supplies">Pharmaceuticals &amp; Medical Supplies</option>
+                                        <option value="Agricultural Produce">Agricultural Produce</option>
+                                        <option value="General Commercial Goods" selected>General Commercial Goods</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cargoWeightKg"><i class="fa-solid fa-weight-scale"></i> Weight (Kg) *</label>
+                                    <input type="number" id="cargoWeightKg" min="10" max="50000" value="500" oninput="calculateLiveFare()" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="distanceKm"><i class="fa-solid fa-road"></i> Approx Distance (Km) *</label>
+                                    <input type="number" id="distanceKm" min="1" max="5000" value="80" oninput="calculateLiveFare()" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="deliveryNotes"><i class="fa-regular fa-note-sticky"></i> Handling Notes / Delivery Instructions</label>
+                                <textarea id="deliveryNotes" rows="2" placeholder="e.g. Handle with care, deliver during business hours..."></textarea>
+                            </div>
+
+                            <!-- Live Fare Estimate Box -->
+                            <div class="fare-estimation-box">
+                                <div class="fare-details">
+                                    <span class="fare-label">Estimated Transport Fare:</span>
+                                    <span class="fare-calc-desc">Base Rate ₹500 + ₹25/km + ₹2/kg</span>
+                                </div>
+                                <div class="fare-amount" id="live-fare-display">₹3,500.00</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                                <i class="fa-solid fa-check"></i> Confirm &amp; Book Transport
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right: My Bookings & Delivery History -->
+                <div class="card my-bookings-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+                            <h3>My Bookings &amp; Status</h3>
+                        </div>
+                        <button class="btn btn-outline-sm" onclick="loadCustomerBookings()">
+                            <i class="fa-solid fa-rotate-right"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="customer-bookings-list" class="bookings-stream">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ADMIN LOGISTICS PORTAL VIEW
+        =========================================== -->
+        <section id="view-admin" class="portal-view">
+            <!-- KPI Counters Row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue"><i class="fa-solid fa-dolly"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Bookings</span>
+                        <h4 id="stat-total-bookings">0</h4>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning"><i class="fa-solid fa-truck-moving"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Active In-Transit</span>
+                        <h4 id="stat-active-deliveries">0</h4>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green"><i class="fa-solid fa-truck-pickup"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Available Vehicles</span>
+                        <h4 id="stat-available-vehicles">0</h4>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Available Drivers</span>
+                        <h4 id="stat-available-drivers">0</h4>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-emerald"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Revenue</span>
+                        <h4 id="stat-total-revenue">₹0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Sub-Navigation Tabs -->
+            <div class="admin-subnav">
+                <button class="subnav-tab active" data-subtab="admin-bookings" onclick="switchAdminTab('admin-bookings')">
+                    <i class="fa-solid fa-list-check"></i> Bookings &amp; Assignments
+                </button>
+                <button class="subnav-tab" data-subtab="admin-vehicles" onclick="switchAdminTab('admin-vehicles')">
+                    <i class="fa-solid fa-truck"></i> Vehicle Fleet Management
+                </button>
+                <button class="subnav-tab" data-subtab="admin-drivers" onclick="switchAdminTab('admin-drivers')">
+                    <i class="fa-solid fa-user-tie"></i> Driver Management
+                </button>
+                <button class="subnav-tab" data-subtab="admin-history" onclick="switchAdminTab('admin-history')">
+                    <i class="fa-solid fa-clipboard-check"></i> Delivery History &amp; Records
+                </button>
+            </div>
+
+            <!-- TAB 1: ALL BOOKINGS & DISPATCH -->
+            <div id="subtab-admin-bookings" class="subtab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-boxes-packing text-primary"></i>
+                            <h3>All Transport Bookings</h3>
+                        </div>
+                        <div class="card-actions">
+                            <select id="filter-booking-status" onchange="renderAdminBookingsTable()" class="select-sm">
+                                <option value="ALL">All Statuses</option>
+                                <option value="PENDING">Pending Approval</option>
+                                <option value="CONFIRMED">Confirmed</option>
+                                <option value="IN_TRANSIT">In Transit</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                            <button class="btn btn-outline-sm" onclick="loadAdminData()">
+                                <i class="fa-solid fa-rotate-right"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tracking ID</th>
+                                        <th>Customer</th>
+                                        <th>Route (From &rarr; To)</th>
+                                        <th>Cargo &amp; Weight</th>
+                                        <th>Vehicle Assigned</th>
+                                        <th>Driver Assigned</th>
+                                        <th>Fare</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-bookings-tbody">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: VEHICLE FLEET MANAGEMENT -->
+            <div id="subtab-admin-vehicles" class="subtab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-truck text-primary"></i>
+                            <h3>Vehicle Fleet &amp; Availability Tracking</h3>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openAddVehicleModal()">
+                            <i class="fa-solid fa-plus"></i> Add New Vehicle
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Vehicle Plate</th>
+                                        <th>Vehicle Model / Type</th>
+                                        <th>Capacity</th>
+                                        <th>Current Status</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-vehicles-tbody">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: DRIVER MANAGEMENT -->
+            <div id="subtab-admin-drivers" class="subtab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-user-tie text-primary"></i>
+                            <h3>Driver Roster &amp; Trip Assignments</h3>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openAddDriverModal()">
+                            <i class="fa-solid fa-plus"></i> Add New Driver
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Driver Name</th>
+                                        <th>License Number</th>
+                                        <th>Contact Phone</th>
+                                        <th>Experience</th>
+                                        <th>Duty Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-drivers-tbody">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: DELIVERY HISTORY & AUDIT RECORDS -->
+            <div id="subtab-admin-history" class="subtab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-file-invoice text-primary"></i>
+                            <h3>Delivered &amp; Completed Consignments Record</h3>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tracking ID</th>
+                                        <th>Customer</th>
+                                        <th>Route</th>
+                                        <th>Vehicle</th>
+                                        <th>Driver</th>
+                                        <th>Completed Revenue</th>
+                                        <th>Delivery Status</th>
+                                        <th>Completion Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-history-tbody">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ==========================================
+         MODALS
+    =========================================== -->
+
+    <!-- 1. ASSIGN VEHICLE & DRIVER MODAL -->
+    <div id="modal-assign" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-truck-arrow-right"></i> Assign Vehicle &amp; Driver</h4>
+                    <button class="btn-close" onclick="closeModal('modal-assign')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-desc">Assign an available vehicle and an on-duty driver for booking: <strong id="assign-tracking-label"></strong></p>
+                    <input type="hidden" id="assign-booking-id">
+
+                    <div class="form-group mb-3">
+                        <label for="assign-vehicle-select">Select Available Vehicle *</label>
+                        <select id="assign-vehicle-select" class="form-control" required>
+                            <option value="">-- Choose Available Vehicle --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="assign-driver-select">Select Available Driver *</label>
+                        <select id="assign-driver-select" class="form-control" required>
+                            <option value="">-- Choose Available Driver --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('modal-assign')">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitAssignment()">
+                        <i class="fa-solid fa-check"></i> Confirm Assignment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ADD VEHICLE MODAL -->
+    <div id="modal-add-vehicle" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-plus-circle"></i> Add New Fleet Vehicle</h4>
+                    <button class="btn-close" onclick="closeModal('modal-add-vehicle')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-vehicle-form" onsubmit="submitNewVehicle(event)">
+                        <div class="form-group mb-3">
+                            <label>Vehicle License Plate *</label>
+                            <input type="text" id="veh-plate" placeholder="e.g. MH-12-PQ-9090" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Vehicle Model / Type *</label>
+                            <select id="veh-type" required>
+                                <option value="Mini Truck (1-2 Ton)">Mini Truck (1-2 Ton)</option>
+                                <option value="Express Cargo Van (800 Kg)">Express Cargo Van (800 Kg)</option>
+                                <option value="Heavy Cargo Truck (10 Ton)">Heavy Cargo Truck (10 Ton)</option>
+                                <option value="Multi-Axle Container (25 Ton)">Multi-Axle Container (25 Ton)</option>
+                                <option value="Flatbed Trailer (15 Ton)">Flatbed Trailer (15 Ton)</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Capacity (in Metric Tons) *</label>
+                            <input type="number" id="veh-capacity" step="0.1" min="0.5" max="50" value="2.0" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Description / Model Info</label>
+                            <input type="text" id="veh-desc" placeholder="e.g. Tata Ultra T.7 / Eicher Pro 2049">
+                        </div>
+                        <div class="modal-footer p-0 mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-vehicle')">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Vehicle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ADD DRIVER MODAL -->
+    <div id="modal-add-driver" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-user-plus"></i> Add New Driver</h4>
+                    <button class="btn-close" onclick="closeModal('modal-add-driver')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-driver-form" onsubmit="submitNewDriver(event)">
+                        <div class="form-group mb-3">
+                            <label>Driver Full Name *</label>
+                            <input type="text" id="drv-name" placeholder="e.g. Ramesh Kumar" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Commercial Driving License No. *</label>
+                            <input type="text" id="drv-license" placeholder="e.g. DL-MH-2022-77889" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Phone Number *</label>
+                            <input type="text" id="drv-phone" placeholder="e.g. +91 98111 22334" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Experience (Years)</label>
+                            <input type="number" id="drv-exp" min="1" max="40" value="5">
+                        </div>
+                        <div class="modal-footer p-0 mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-driver')">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Driver</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. LOGIN / SWITCH USER MODAL -->
+    <div id="modal-login" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-users"></i> Switch User or Register</h4>
+                    <button class="btn-close" onclick="closeModal('modal-login')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="quick-user-select mb-4">
+                        <label class="font-bold mb-2 block">Quick Switch Demo Profiles:</label>
+                        <div class="demo-user-buttons">
+                            <button class="btn btn-outline-sm btn-block mb-2 text-left" onclick="quickLogin('shaheed@example.com', 'user123')">
+                                <i class="fa-solid fa-user text-primary"></i> Shaheed Sofi Patel (Customer)
+                            </button>
+                            <button class="btn btn-outline-sm btn-block mb-2 text-left" onclick="quickLogin('sufiyan@example.com', 'user123')">
+                                <i class="fa-solid fa-user text-primary"></i> Sufiyan Ansari (Customer)
+                            </button>
+                            <button class="btn btn-outline-sm btn-block text-left" onclick="quickLogin('admin@translogistics.com', 'admin123')">
+                                <i class="fa-solid fa-shield-halved text-warning"></i> Logistics Admin
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <h5 class="mt-3 mb-2 font-bold">Or Register New Customer</h5>
+                    <form id="register-form" onsubmit="handleRegisterUser(event)">
+                        <div class="form-group mb-2">
+                            <label>Full Name *</label>
+                            <input type="text" id="reg-name" required placeholder="e.g. Rajesh Patil">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label>Email Address *</label>
+                            <input type="email" id="reg-email" required placeholder="e.g. rajesh@example.com">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label>Phone Number *</label>
+                            <input type="text" id="reg-phone" required placeholder="e.g. +91 98222 33445">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Password *</label>
+                            <input type="password" id="reg-password" required placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-user-plus"></i> Register Customer Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Footer -->
+    <footer class="footer">
+        <p>Transport &amp; Logistic Management System (TMS) &bull; Capgemini Full-Stack Java Project &bull; Spring Boot 3 &amp; Java 21</p>
+        <p style="margin-top: 5px; font-size: 0.76rem; color: #64748b;">
+            H2 Console: <a href="/h2-console" target="_blank" style="color: var(--primary); font-weight: 600;">/h2-console</a> &bull;
+            JDBC URL: <code style="background: #e2e8f0; padding: 2px 5px; border-radius: 4px; color: #0f172a;">jdbc:h2:mem:transportdb</code> &bull;
+            User: <strong>sa</strong> &bull; Password: <em>(leave blank)</em>
+        </p>
+    </footer>
+
+    <!-- App JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
